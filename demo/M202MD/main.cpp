@@ -1,0 +1,120 @@
+#include <Arduino.h>
+#include <vfd.h>
+
+void demo_welcome(void);
+void demo_dimming(void);
+void demo_tmark(void);
+void demo_end(void);
+
+void setup() {
+    Serial.begin(9600);
+
+    delay(1000);
+
+
+
+    vfd_init();
+}
+
+void loop() {
+    delay(1000);
+    demo_welcome();
+    demo_dimming();
+    demo_tmark();
+    demo_end();
+}
+
+void demo_welcome(void) {
+    vfd_clear();
+    // \xae,\xb0 : special character
+    vfd_puts_P("\xae\xae TOSHIBA  LIUST \xaf\xaf");
+    vfd_gotoxy(1, 2);
+    vfd_puts_P("\xb0 RS-232C INTERFACE");
+    delay(2000);
+}
+void demo_end(void) {
+    vfd_clear();
+    vfd_gotoxy(4, 1);
+    vfd_puts_P("Thank you for");
+    vfd_gotoxy(6, 2);
+    vfd_puts_P("Watching!.");
+    delay(4000);
+
+    vfd_clear();
+    delay(4000);
+}
+void demo_dimming(void) {
+    vfd_clear();
+    for (uint8_t i = 0; i < VFD_DISP_LENGTH; i++)
+        vfd_putc(0xdb);
+    vfd_gotoxy(1, 2);
+    for (uint8_t i = 0; i < VFD_DISP_LENGTH; i++)
+        vfd_putc(0xdb);
+
+    vfd_gotoxy(5, 1);
+    vfd_puts_P(" Brightness ");
+
+    vfd_gotoxy(8, 2);
+    vfd_puts_P(" 100% ");
+    vfd_dimming(VFD_DIMMING_100);
+    delay(1500);
+
+    vfd_gotoxy(8, 2);
+    vfd_putc(0xdb);
+    vfd_puts_P(" 80% ");
+    vfd_dimming(VFD_DIMMING_80);
+    delay(1000);
+
+    vfd_gotoxy(9, 2);
+    vfd_puts_P(" 60% ");
+    vfd_dimming(VFD_DIMMING_60);
+    delay(1000);
+
+    vfd_gotoxy(9, 2);
+    vfd_puts_P(" 40% ");
+    vfd_dimming(VFD_DIMMING_40);
+    delay(1000);
+
+    vfd_gotoxy(9, 2);
+    vfd_puts_P(" 20% ");
+    vfd_dimming(VFD_DIMMING_20);
+    delay(3000);
+
+    vfd_gotoxy(8, 2);
+    vfd_puts_P(" 100% ");
+    vfd_dimming(VFD_DIMMING_100);
+    delay(3000);
+}
+
+void demo_tmark(void) {
+    uint32_t tmark = 0;
+
+    demo_welcome();
+
+    vfd_tmark(0xfffff);  // TMark all On
+    delay(1000);
+
+    vfd_tmark(0x0);  // TMark all Off
+    delay(1000);
+
+    //         20....+...10....+...1
+    //          09876543210987654321
+    vfd_tmark(0b11111000001111100000);  // TMark may be configured in bit unit.
+    delay(1000);
+
+    vfd_tmark(0b00000111110000011111);  // TMark may be configured in bit unit.
+    delay(1000);
+
+    for (uint8_t i = 0; i < 20; i++) {
+        vfd_tmark(tmark << i);
+        delay(100);
+    }
+    delay(1000);
+
+    tmark = 0x80000;
+    for (uint8_t i = 0; i < 20; i++) {
+        vfd_tmark(tmark >> i);
+        delay(100);
+    }
+    delay(2000);
+}
