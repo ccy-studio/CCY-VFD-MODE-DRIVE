@@ -2,12 +2,12 @@
  * @Description:
  * @Author: chenzedeng
  * @Date: 2023-08-31 20:52:37
- * @LastEditTime: 2023-08-31 23:15:12
+ * @LastEditTime: 2023-09-04 14:38:11
  */
 #include <Adafruit_AHTX0.h>
-#include <Adafruit_NeoPixel.h>
 #include <Wire.h>
 #include <constant.h>
+#include <rx8025.h>
 #include <te200k.h>
 
 void led_run(void* pvParameters);
@@ -15,14 +15,12 @@ void handle_key_interrupt();
 
 u32 key_last_time;
 
-#define NUMPIXELS 4
-Adafruit_NeoPixel strip(NUMPIXELS, RGB_PIN, NEO_GRB + NEO_KHZ800);
-
 Adafruit_AHTX0 aht;
+rx8025_timeinfo timeinfo;
+
 void setup() {
     Serial.begin(115200);
     init_key_gpio();
-    init_rgb_gpio();
     init_buz_gpio();
     init_vfd_en_gpio();
     init_ir_gpio();
@@ -34,6 +32,8 @@ void setup() {
             delay(10);
     }
     Serial.println("AHT10 or AHT20 found");
+    init_8025t();
+    rx8025_set_all(23, 9, 4, 1, 18, 0, 0);
 
     digitalWrite(VFD_EN_PIN, HIGH);
     delay(100);
@@ -49,8 +49,6 @@ void setup() {
     // analogWrite(RS232_IN, 128);
     // analogWrite(RS232_OUT, 128);
 
-    strip.begin();
-
     attachInterrupt(KEY1_PIN, handle_key_interrupt, CHANGE);
     attachInterrupt(KEY2_PIN, handle_key_interrupt, CHANGE);
     attachInterrupt(KEY3_PIN, handle_key_interrupt, CHANGE);
@@ -59,18 +57,23 @@ void setup() {
 }
 
 void loop() {
-    delay(1000);
-    te200k_display_clear();
-    te200k_cursor_set(1, 1);
-    TE_VFD_WRITE_S("Hello");
-    delay(1000);
-    te200k_cursor_set(1, 2);
-    TE_VFD_WRITE_S("VFDTest Success");
+    // delay(1000);
+    // te200k_display_clear();
+    // te200k_cursor_set(1, 1);
+    // TE_VFD_WRITE_S("Hello");
+    // delay(1000);
+    // te200k_cursor_set(1, 2);
+    // TE_VFD_WRITE_S("VFDTest Success");
 
     // sensors_event_t humidity, temp;
     // aht.getEvent(&humidity, &temp);
     // printf("温度：%f -- 湿度: %f\n", temp.temperature,
     //        humidity.relative_humidity);
+
+    delay(500);
+    rx8025_read_all(&timeinfo);
+    printf("Time: %d-%d-%d %d:%d:%d\n", timeinfo.year, timeinfo.month,
+           timeinfo.day, timeinfo.hour, timeinfo.min, timeinfo.sec);
 }
 
 void handle_key_interrupt() {

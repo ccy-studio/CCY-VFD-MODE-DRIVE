@@ -11,9 +11,6 @@ void init_key_gpio() {
     pinMode(KEY2_PIN, INPUT);
     pinMode(KEY3_PIN, INPUT);
 }
-void init_rgb_gpio() {
-    pinMode(RGB_PIN, OUTPUT);
-}
 void init_buz_gpio() {
     pinMode(BUZ_PIN, OUTPUT);
 }

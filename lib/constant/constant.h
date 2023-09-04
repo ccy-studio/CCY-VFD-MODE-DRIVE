@@ -1,4 +1,11 @@
 /*
+ * @Description: 
+ * @Blog: saisaiwa.com
+ * @Author: ccy
+ * @Date: 2023-09-04 10:19:42
+ * @LastEditTime: 2023-09-04 10:54:37
+ */
+/*
  * @Description:
  * @Author: chenzedeng
  * @Date: 2023-08-31 20:57:30
@@ -15,7 +22,7 @@
 #define KEY2_PIN 10
 #define KEY3_PIN 4
 
-#define RGB_PIN 6
+#define RX8025_IN_PIN 6
 #define BUZ_PIN 7
 #define IR_PIN 2
 
@@ -33,7 +40,6 @@
 #define V_DELAY_MS(ms) vTaskDelay(pdMS_TO_TICKS(ms))
 
 void init_key_gpio();
-void init_rgb_gpio();
 void init_buz_gpio();
 void init_ir_gpio();
 void init_vfd_en_gpio();
