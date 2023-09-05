@@ -15,6 +15,8 @@
 #define __CONSTANT_H
 #include <Arduino.h>
 
+#define DEBUG
+
 #define I2C_SDA_PIN 0
 #define I2C_SCL_PIN 1
 
@@ -43,5 +45,9 @@ void init_key_gpio();
 void init_buz_gpio();
 void init_ir_gpio();
 void init_vfd_en_gpio();
+/**
+ * VFD电源Enable
+*/
+void vfd_power(bool openState);
 
 #endif

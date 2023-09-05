@@ -1,5 +1,5 @@
 /*
- * @Description: 
+ * @Description:
  * @Author: chenzedeng
  * @Date: 2023-08-31 21:01:47
  * @LastEditTime: 2023-08-31 21:57:49
@@ -19,4 +19,11 @@ void init_ir_gpio() {
 }
 void init_vfd_en_gpio() {
     pinMode(VFD_EN_PIN, OUTPUT);
+}
+
+/**
+ * VFD电源Enable
+ */
+void vfd_power(bool openState) {
+    digitalWrite(VFD_EN_PIN, openState ? HIGH : LOW);
 }

@@ -2,21 +2,28 @@
  * @Description:
  * @Author: chenzedeng
  * @Date: 2023-08-31 20:52:37
- * @LastEditTime: 2023-09-04 14:38:11
+ * @LastEditTime: 2023-09-05 18:09:34
  */
 #include <Adafruit_AHTX0.h>
 #include <Wire.h>
 #include <constant.h>
+#include <gui.h>
 #include <rx8025.h>
 #include <te200k.h>
+#include "store.h"
+#include "web_server.h"
+#include "LittleFS.h"
 
-void led_run(void* pvParameters);
 void handle_key_interrupt();
+void handle_wifi_config(WiFiManager* myWiFiManager);
+void handle_wifi_timeout();
 
 u32 key_last_time;
 
 Adafruit_AHTX0 aht;
 rx8025_timeinfo timeinfo;
+
+extern WiFiManager wifiManager;
 
 void setup() {
     Serial.begin(115200);
@@ -24,6 +31,9 @@ void setup() {
     init_buz_gpio();
     init_vfd_en_gpio();
     init_ir_gpio();
+    attachInterrupt(KEY1_PIN, handle_key_interrupt, CHANGE);
+    attachInterrupt(KEY2_PIN, handle_key_interrupt, CHANGE);
+    attachInterrupt(KEY3_PIN, handle_key_interrupt, CHANGE);
 
     Wire.setPins(I2C_SDA_PIN, I2C_SCL_PIN);
     if (!aht.begin(&Wire, 0L, 0x38)) {
@@ -33,27 +43,14 @@ void setup() {
     }
     Serial.println("AHT10 or AHT20 found");
     init_8025t();
-    rx8025_set_all(23, 9, 4, 1, 18, 0, 0);
+    rx8025_reset();
+    // rx8025_set_all(23, 9, 4, 1, 23, 59, 0);
 
-    digitalWrite(VFD_EN_PIN, HIGH);
-    delay(100);
-    Serial1.begin(38400, SERIAL_8N1, RS232_RX, RS232_TX);
-    te200k_init();
-    // pinMode(RS232_IN, OUTPUT);
-    // pinMode(RS232_OUT, OUTPUT);
-    // pinMode(RS232_TX, OUTPUT);
-    // pinMode(RS232_RX, OUTPUT);
+    gui_init();
 
-    // analogWrite(VFD_EN_PIN, 128);
-    // analogWrite(RS232_TX, 128);
-    // analogWrite(RS232_IN, 128);
-    // analogWrite(RS232_OUT, 128);
-
-    attachInterrupt(KEY1_PIN, handle_key_interrupt, CHANGE);
-    attachInterrupt(KEY2_PIN, handle_key_interrupt, CHANGE);
-    attachInterrupt(KEY3_PIN, handle_key_interrupt, CHANGE);
-
-    // xTaskCreate(led_run, "LED Task", 800, NULL, 1, NULL);
+    delay(1000);
+    store_init();
+    wifi_start(handle_wifi_config, handle_wifi_timeout);
 }
 
 void loop() {
@@ -70,10 +67,18 @@ void loop() {
     // printf("温度：%f -- 湿度: %f\n", temp.temperature,
     //        humidity.relative_humidity);
 
-    delay(500);
-    rx8025_read_all(&timeinfo);
-    printf("Time: %d-%d-%d %d:%d:%d\n", timeinfo.year, timeinfo.month,
-           timeinfo.day, timeinfo.hour, timeinfo.min, timeinfo.sec);
+    delay(100);
+    // rx8025_read_all(&timeinfo);
+    // printf("Time: %d-%d-%d %d:%d:%d Week:%x\n", timeinfo.year,
+    // timeinfo.month,
+    //        timeinfo.day, timeinfo.hour, timeinfo.min, timeinfo.sec,
+    //        timeinfo.week);
+
+    wifi_loop();
+    printf("Sycce\n");
+
+    // Serial.print("IP address: ");
+    // Serial.println(WiFi.localIP());
 }
 
 void handle_key_interrupt() {
@@ -91,7 +96,11 @@ void handle_key_interrupt() {
     key_last_time = micros();
 }
 
-void led_run(void* pvParameters) {
-    while (1) {
-    }
+void handle_wifi_config(WiFiManager* myWiFiManager) {
+    Serial.println("Entered config mode");
+    Serial.println(WiFi.softAPIP());
+    Serial.println(myWiFiManager->getConfigPortalSSID());
+}
+void handle_wifi_timeout() {
+    printf("Wifi Config Timeout!\n");
 }

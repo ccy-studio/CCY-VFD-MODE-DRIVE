@@ -1,3 +1,10 @@
+/*
+ * @Description:
+ * @Blog: saisaiwa.com
+ * @Author: ccy
+ * @Date: 2023-09-04 10:53:37
+ * @LastEditTime: 2023-09-05 10:52:37
+ */
 #include <rx8025.h>
 
 void init_8025t() {
@@ -6,12 +13,13 @@ void init_8025t() {
 }
 
 void rx8025_reset() {
-    Wire.beginTransmission(RX8025_ADDR_W);
-    u8 command[2];
-    command[0] = 0x0F;
-    command[1] = 0x01;
-    Wire.write(command, 2);
-    delay(1200);
+    //clean flag
+    Wire.beginTransmission(RX8025_ADDR);
+    u8 command[3];
+    command[0] = 0xe0;
+    command[1] = 0x00;
+    command[2] = 0x40;
+    Wire.write(command, 3);
     Wire.endTransmission(true);
 }
 
@@ -30,7 +38,7 @@ void rx8025_set_all(u8 year,
                     u8 hour,
                     u8 min,
                     u8 sec) {
-    Wire.beginTransmission(RX8025_ADDR_W);
+    Wire.beginTransmission(RX8025_ADDR);
     u8 command[8];
     command[0] = 0x00;
     command[1] = toBcd(sec);
@@ -45,10 +53,10 @@ void rx8025_set_all(u8 year,
 }
 
 void rx8025_read_all(rx8025_timeinfo* timeinfo) {
-    Wire.beginTransmission(RX8025_ADDR_W);
+    Wire.beginTransmission(RX8025_ADDR);
     Wire.write(0x00);  // 寄存器地址，用于读取日期和时间
     Wire.endTransmission(false);
-    size_t recv = Wire.requestFrom(RX8025_ADDR_R, 7, true);
+    size_t recv = Wire.requestFrom(RX8025_ADDR, 7, 1);
     if (recv != 7) {
         printf("rx8025_read_all 读取错误\n");
         return;

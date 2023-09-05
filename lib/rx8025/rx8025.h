@@ -11,8 +11,7 @@
 #include <Wire.h>
 #include <constant.h>
 
-#define RX8025_ADDR_R 65
-#define RX8025_ADDR_W 64
+#define RX8025_ADDR 0x32
 
 typedef struct {
     u8 year;
