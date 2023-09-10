@@ -2,7 +2,7 @@
  * @Description:
  * @Author: chenzedeng
  * @Date: 2023-08-31 20:52:37
- * @LastEditTime: 2023-09-05 18:09:34
+ * @LastEditTime: 2023-09-10 19:31:13
  */
 #include <Adafruit_AHTX0.h>
 #include <Wire.h>
@@ -10,20 +10,25 @@
 #include <gui.h>
 #include <rx8025.h>
 #include <te200k.h>
+#include "LittleFS.h"
 #include "store.h"
 #include "web_server.h"
-#include "LittleFS.h"
 
 void handle_key_interrupt();
 void handle_wifi_config(WiFiManager* myWiFiManager);
 void handle_wifi_timeout();
+u8 set_time(String* date);
+u8 set_aht20_val(String* str);
 
 u32 key_last_time;
 
 Adafruit_AHTX0 aht;
+sensors_event_t humidity, temp;
 rx8025_timeinfo timeinfo;
-
-extern WiFiManager wifiManager;
+String date_str;
+u8 last_date_len;
+u8 last_second_line_len;
+String second_line_str;
 
 void setup() {
     Serial.begin(115200);
@@ -44,39 +49,31 @@ void setup() {
     Serial.println("AHT10 or AHT20 found");
     init_8025t();
     rx8025_reset();
-    // rx8025_set_all(23, 9, 4, 1, 23, 59, 0);
+    // rx8025_set_all(23, 9, 10, 7, 14, 36, 0);
 
+    delay(500);
     gui_init();
-
+    gui_set_brightness(4);
+    gui_print("Hello Design By Saisaiwa");
     delay(1000);
+    gui_clear_all();
     store_init();
-    wifi_start(handle_wifi_config, handle_wifi_timeout);
+    // wifi_start(handle_wifi_config, handle_wifi_timeout);
 }
 
 void loop() {
-    // delay(1000);
-    // te200k_display_clear();
-    // te200k_cursor_set(1, 1);
-    // TE_VFD_WRITE_S("Hello");
-    // delay(1000);
-    // te200k_cursor_set(1, 2);
-    // TE_VFD_WRITE_S("VFDTest Success");
+    delay(500);
+    if (set_time(&date_str)) {
+        gui_clear_line(1);
+    }
+    gui_print(1, 1, date_str.c_str());
 
-    // sensors_event_t humidity, temp;
-    // aht.getEvent(&humidity, &temp);
-    // printf("温度：%f -- 湿度: %f\n", temp.temperature,
-    //        humidity.relative_humidity);
+    if (set_aht20_val(&second_line_str)) {
+        gui_clear_line(2);
+    }
+    gui_print_cn(1, 2, second_line_str.c_str());
 
-    delay(100);
-    // rx8025_read_all(&timeinfo);
-    // printf("Time: %d-%d-%d %d:%d:%d Week:%x\n", timeinfo.year,
-    // timeinfo.month,
-    //        timeinfo.day, timeinfo.hour, timeinfo.min, timeinfo.sec,
-    //        timeinfo.week);
-
-    wifi_loop();
-    printf("Sycce\n");
-
+    // wifi_loop();
     // Serial.print("IP address: ");
     // Serial.println(WiFi.localIP());
 }
@@ -103,4 +100,59 @@ void handle_wifi_config(WiFiManager* myWiFiManager) {
 }
 void handle_wifi_timeout() {
     printf("Wifi Config Timeout!\n");
+}
+
+u8 set_time(String* date) {
+    date->clear();
+    rx8025_read_all(&timeinfo);
+    *date += "20";
+    *date += timeinfo.year;
+    *date += "-";
+    if (timeinfo.month < 10) {
+        *date += "0";
+    }
+    *date += timeinfo.month;
+    *date += "-";
+    if (timeinfo.day < 10) {
+        *date += "0";
+    }
+    *date += timeinfo.day;
+
+    *date += " ";
+    if (timeinfo.hour < 10) {
+        *date += "0";
+    }
+    *date += timeinfo.hour;
+    *date += ":";
+
+    if (timeinfo.min < 10) {
+        *date += "0";
+    }
+    *date += timeinfo.min;
+    *date += ":";
+
+    if (timeinfo.sec < 10) {
+        *date += "0";
+    }
+    *date += timeinfo.sec;
+    u8 result = last_date_len != date->length();
+    last_date_len = date->length();
+    return result;
+}
+
+u8 set_aht20_val(String* str) {
+    str->clear();
+    aht.getEvent(&humidity, &temp);
+    *str += "温度";
+    *str += ":";
+    *str += (int)temp.temperature;
+    *str += "℃ ";
+    *str += "湿度";
+    *str += ":";
+    *str += (int)humidity.relative_humidity;
+    *str += "%";
+
+    u8 result = last_second_line_len != str->length();
+    last_second_line_len = str->length();
+    return result;
 }

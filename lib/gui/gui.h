@@ -23,6 +23,8 @@ void gui_init();
  */
 void gui_print(u8 x, u8 y, const char* str);
 
+void gui_print_cn(u8 x, u8 y, const char* str);
+
 /**
  * 打印字符-自动换行
  * @param str
