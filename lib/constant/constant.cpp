@@ -2,7 +2,7 @@
  * @Description:
  * @Author: chenzedeng
  * @Date: 2023-08-31 21:01:47
- * @LastEditTime: 2023-08-31 21:57:49
+ * @LastEditTime: 2023-09-22 23:48:10
  */
 #include <constant.h>
 
@@ -13,6 +13,7 @@ void init_key_gpio() {
 }
 void init_buz_gpio() {
     pinMode(BUZ_PIN, OUTPUT);
+    digitalWrite(BUZ_PIN, LOW);
 }
 void init_ir_gpio() {
     pinMode(IR_PIN, OUTPUT);
