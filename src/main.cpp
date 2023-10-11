@@ -2,7 +2,7 @@
  * @Description:
  * @Author: chenzedeng
  * @Date: 2023-08-31 20:52:37
- * @LastEditTime: 2023-09-10 19:31:13
+ * @LastEditTime: 2023-10-11 17:49:07
  */
 #include <Adafruit_AHTX0.h>
 #include <Wire.h>
@@ -14,7 +14,8 @@
 #include "store.h"
 #include "web_server.h"
 
-void handle_key_interrupt();
+void handle_key_task(void* params);
+void button_callback(void* params);
 void handle_wifi_config(WiFiManager* myWiFiManager);
 void handle_wifi_timeout();
 u8 set_time(String* date);
@@ -30,15 +31,24 @@ u8 last_date_len;
 u8 last_second_line_len;
 String second_line_str;
 
+typedef struct {
+    u8 gpio;
+    u8 state;  // 0 press,1 release,2 long press
+    u32 press_time;
+} button_t;
+
+button_t btn_arr[3] = {{KEY1_PIN}, {KEY2_PIN}, {KEY3_PIN}};
+QueueHandle_t queue;
+
 void setup() {
     Serial.begin(115200);
     init_key_gpio();
     init_buz_gpio();
     init_vfd_en_gpio();
     init_ir_gpio();
-    attachInterrupt(KEY1_PIN, handle_key_interrupt, CHANGE);
-    attachInterrupt(KEY2_PIN, handle_key_interrupt, CHANGE);
-    attachInterrupt(KEY3_PIN, handle_key_interrupt, CHANGE);
+
+    // xQueueGenericCreate()
+    queue = xQueueCreate(3, sizeof(button_t));
 
     Wire.setPins(I2C_SDA_PIN, I2C_SCL_PIN);
     if (!aht.begin(&Wire, 0L, 0x38)) {
@@ -54,11 +64,17 @@ void setup() {
     delay(500);
     gui_init();
     gui_set_brightness(4);
-    gui_print("Hello Design By Saisaiwa");
+    gui_print("Hello My VFD~~~");
     delay(1000);
+    for (size_t i = 1; i <= 20; i++) {
+        gui_print(i, 2, "#");
+        V_DELAY_MS(100);
+    }
     gui_clear_all();
-    store_init();
+    // store_init();
     // wifi_start(handle_wifi_config, handle_wifi_timeout);
+    xTaskCreate(handle_key_task, "KEYSCAN", 1024, NULL, 2, NULL);
+    xTaskCreate(button_callback, "CALLBACK", 1024, NULL, 2, NULL);
 }
 
 void loop() {
@@ -78,19 +94,69 @@ void loop() {
     // Serial.println(WiFi.localIP());
 }
 
-void handle_key_interrupt() {
-    u32 filter_sec = (micros() - key_last_time) / 1000;
-    if (filter_sec < 500) {
+void button_callback(void* params) {
+    button_t btn;
+    while (1) {
+        xQueueReceive(queue, &btn, portMAX_DELAY);  // 阻塞状态
+        printf("按键触发:IO%d,state:%d\n", btn.gpio, btn.state);
+
+        if (btn.gpio == KEY1_PIN) {
+            if (btn.state == 0) {
+            } else if (btn.state == 2) {
+            }
+        } else if (btn.gpio == KEY2_PIN) {
+        } else if (btn.gpio == KEY3_PIN) {
+        }
+
+        V_DELAY_MS(1);
+    }
+}
+
+void handle_key_logic(button_t* btn) {
+    if (btn->press_time >= 3000) {
+        // 如果大于4秒就全部忽略
+        btn->press_time += 5;
         return;
     }
-    if (!digitalRead(KEY1_PIN)) {
-        Serial.print("KEY1 Press\n");
-    } else if (!digitalRead(KEY2_PIN)) {
-        Serial.print("KEY2 Press\n");
-    } else if (!digitalRead(KEY3_PIN)) {
-        Serial.print("KEY3 Press\n");
+    u8 level = digitalRead(btn->gpio);
+    if (level) {
+        btn->state = 1;
+        btn->press_time = 0;
+    } else {
+        // is press
+        if (btn->state == 0) {
+            // ignore
+            btn->press_time += 5;
+        } else if (btn->state == 1) {
+            btn->state = 0;
+            btn->press_time = 0;
+            // call btn
+            xQueueSend(queue, btn, 0);
+            return;
+        }
+        if (btn->press_time >= 3000) {
+            if (btn->state != 2) {
+                btn->press_time += 5;
+                btn->state = 2;
+                // call long press
+                xQueueSend(queue, btn, 0);
+                return;
+            }
+        }
     }
-    key_last_time = micros();
+}
+
+void handle_key_task(void* params) {
+    while (1) {
+        if (!digitalRead(KEY1_PIN)) {
+            handle_key_logic(&btn_arr[0]);
+        } else if (!digitalRead(KEY2_PIN)) {
+            handle_key_logic(&btn_arr[1]);
+        } else if (!digitalRead(KEY3_PIN)) {
+            handle_key_logic(&btn_arr[2]);
+        }
+        V_DELAY_MS(5);
+    }
 }
 
 void handle_wifi_config(WiFiManager* myWiFiManager) {

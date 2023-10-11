@@ -2,7 +2,7 @@
  * @Description:
  * @Author: chenzedeng
  * @Date: 2023-08-31 21:01:47
- * @LastEditTime: 2023-08-31 21:57:49
+ * @LastEditTime: 2023-10-11 17:19:57
  */
 #include <constant.h>
 
@@ -13,12 +13,15 @@ void init_key_gpio() {
 }
 void init_buz_gpio() {
     pinMode(BUZ_PIN, OUTPUT);
+    digitalWrite(BUZ_PIN, LOW);
 }
 void init_ir_gpio() {
     pinMode(IR_PIN, OUTPUT);
+    digitalWrite(IR_PIN, LOW);
 }
 void init_vfd_en_gpio() {
     pinMode(VFD_EN_PIN, OUTPUT);
+    digitalWrite(VFD_EN_PIN, LOW);
 }
 
 /**
