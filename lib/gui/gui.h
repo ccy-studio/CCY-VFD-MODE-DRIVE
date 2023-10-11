@@ -4,7 +4,7 @@
  * @Blog: saisaiwa.com
  * @Author: ccy
  * @Date: 2023-09-05 11:42:49
- * @LastEditTime: 2023-09-05 14:08:50
+ * @LastEditTime: 2023-10-11 21:21:28
  */
 #ifndef __GUI_H
 #define __GUI_H
@@ -44,5 +44,7 @@ void gui_clear_line(u8 y);
  * @param brightness 0~255
  */
 void gui_set_brightness(u8 brightness);
+
+void gui_set_cursor_display(u8 enable);
 
 #endif

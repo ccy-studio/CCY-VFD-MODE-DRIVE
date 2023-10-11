@@ -81,3 +81,7 @@ void gui_clear_line(u8 y) {
 void gui_set_brightness(u8 brightness) {
     te200k_display_brightness(brightness);
 }
+
+void gui_set_cursor_display(u8 enable) {
+    te200k_cursor_display(enable);
+}

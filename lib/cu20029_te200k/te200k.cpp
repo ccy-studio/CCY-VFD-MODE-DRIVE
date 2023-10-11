@@ -2,7 +2,7 @@
  * @Description:
  * @Author: chenzedeng
  * @Date: 2023-08-20 18:46:14
- * @LastEditTime: 2023-08-20 22:58:47
+ * @LastEditTime: 2023-10-11 21:04:27
  */
 #include <te200k.h>
 
@@ -56,7 +56,7 @@ void te200k_init(void) {
     te200k_cursor_set(1, 1);
     te200k_display_power(1);
     te200k_display_reverse(0);
-    te200k_display_brightness(1);
+    te200k_display_brightness(4);
     
     // te200k_display_blink(255);
 }
