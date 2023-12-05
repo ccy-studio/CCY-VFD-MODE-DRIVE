@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <vfd.h>
+#include "constant.h"
 
 void demo_welcome(void);
 void demo_dimming(void);
@@ -7,12 +8,11 @@ void demo_tmark(void);
 void demo_end(void);
 
 void setup() {
-    Serial.begin(9600);
-
-    delay(1000);
-
-
-
+    Serial.begin(115200);
+    vfd_power(true);
+    delay(500);
+    Serial1.begin(9600, SERIAL_8N1, RS232_RX, RS232_TX);
+    delay(500);
     vfd_init();
 }
 
